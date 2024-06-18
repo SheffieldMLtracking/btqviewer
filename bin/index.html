@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="style.css">
+<head>
+ <script src="jquery-3.3.1.min.js"></script>
+
+</head>
+<body>
+
+<button id="last">LAST</button>
+<button id="next">NEXT</button>
+<button id="last10">LAST10</button>
+<button id="next10">NEXT10</button>
+<button id="reset">RESET</button>
+<button id="save">SAVE</button>
+Image:<input id="imagenum" value="0" size=4 /></br>. Date/time string hh:mm:ss: <input id="datetime" value="0" size=40 /><button id="goto">GO TO</button><button id="newconfig">NEW CONFIGURATION</button>  
+<button id="detectrange">Run Detect on next 50 images</button>  Location: <span id="locationstring"></span></br>
+Filename:<span id="filename">_</span>
+ Time from image:<span id="clock">_</span><br/>
+Track:<input type='checkbox' id='track'></input>
+Pixel value scaling, max:<input id="scaletext" value="10"></input><span id="loc">__</span>. Port:<input id="port" value="5000"></input>.</br>
+Session:<select name="session" id="session">
+ <option value="session1">Session1</option>
+ </select>
+ Set:<select name="photo_set" id="photo_set">
+ <option value="set1">Set1</option>
+ </select>
+Box:<select name="box" id="box">
+ <option value="box1">Box1</option>
+ </select>
+Cam:<select name="camid" id="camid">
+ <option value="cam1">Cam1</option>
+ </select>
+<div>
+<table>
+<tr><td>r</td><td>- reset zoom</td></tr>
+<tr><td>n</td><td>- next image +1</td></tr>
+<tr><td>l</td><td>- last image -1</td></tr>
+<tr><td>shift-N</td><td>- next image +10</td></tr>
+<tr><td>L</td><td>- last image -10</td></tr>
+<tr><td>a</td><td>- next camera</td></tr>
+<tr><td>z</td><td>- last camera</td></tr>
+<tr><td>left click</td><td>- zoom in</td></tr>
+<tr><td>  (with shift)</td><td>- save marker</td></tr>
+<tr><td></td><td>clocktop/bottom, post1top/bottom...</tr>
+<tr><td>x</td><td>- delete (nearby) marker</td></tr>
+<tr><td>middle click</td><td>- save  bee location</td></tr>
+<tr><td>  (with shift)</td><td>- save uncertain location</td></tr>
+<tr><td>  (with ctrl)</td><td>- save control event</td></tr>
+<tr><td>d</td><td>- delete all labels in image</td></tr>
+<tr><td>s</td><td>- process Stick #tags<input id="sticknum" value="6" size=3 /></td></tr>
+</table>
+Config Files:<br /><span id="configfiles">_</span>
+</div>
+<canvas id="image2" width="1024px" height="768px" style="z-index:1;" ></canvas>
+<div id="image" style="style="z-index:2;" ></div>
+ <script src="label.js"></script>
+</body>
+

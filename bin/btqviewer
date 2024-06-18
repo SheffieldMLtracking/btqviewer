@@ -1,0 +1,180 @@
+#!/usr/bin/env python
+
+from datetime import datetime
+import re
+from flask import Flask, make_response, jsonify
+import numpy as np
+from flask_cors import CORS
+#from flask_compress import Compress
+app = Flask(__name__)
+#Compress(app)
+CORS(app)
+from glob import glob
+import argparse
+import webbrowser
+import os
+import re
+import json
+import pickle
+from functools import lru_cache
+maxsize = None
+
+parser = argparse.ArgumentParser(description='Provide simple interface to label bee images')
+parser.add_argument('imgpath',type=str,help='Path to images')
+parser.add_argument('--refreshcache',help='Whether to refresh the cache',action="store_true")
+parser.add_argument('--port',required=False,type=int,help='Port')
+parser.add_argument('--config',required=False,type=str,help='Config Filename, e.g. config000000.json')
+args = parser.parse_args()
+
+pathtoimgsdir = args.imgpath
+pathtoimgsdir = os.path.abspath(pathtoimgsdir)
+scriptpath = os.path.dirname(os.path.realpath(__file__))
+os.chdir(scriptpath)
+
+try:
+    os.mkdir('cache')
+except FileExistsError:
+    pass
+    
+webbrowser.open("file://" + os.path.realpath('index.html'),new=2)
+if 'port' in args:
+    port = args.port
+else:
+    port = 5000
+
+@lru_cache(maxsize=maxsize)
+def getimgfilelist(path,camid=None):
+    return sorted(glob('%s/*.np'%(path)))
+
+def getimgfilename(session,photo_set,box,camid,number):
+    #return '/home/mike/Documents/Research/rsync_bee/test/beephotos/2024-06-13/unnamed_session/unnamed_set/13/02G14695548/20240613_10+21+16.691258_0000.np'
+    try:
+        pathtofiles = pathtoimgsdir+'/'+session+'/'+photo_set+'/'+box+'/'+camid;
+        imgfilelist = getimgfilelist(pathtofiles)
+        fn = imgfilelist[number]
+    except:
+        fn = "-" 
+    return fn
+    
+def getdatafilename(session,photo_set,box,camid,number,source):
+    """
+    Returns data folder, and full path+filename
+    """
+    fn = getimgfilename(session,photo_set,box,camid,number)
+    fnsplit = fn.split('/')
+    pathtodata = '/'.join(fnsplit[:-1])+'/'+source
+    return pathtodata, pathtodata+'/'+fnsplit[-1][:-2]+'json'
+    
+
+@app.route('/')
+def hello_world():
+    return 'root node of bee label API.'
+
+@app.route('/getsessions')
+def getsessions():
+    subfolders = [ f.name for f in os.scandir(pathtoimgsdir) if f.is_dir() ]
+    return json.dumps(subfolders)
+    
+@app.route('/getsets/<string:session>')
+def getsets(session):
+    subfolders = [ f.name for f in os.scandir(pathtoimgsdir+'/'+session) if f.is_dir() ]
+    return json.dumps(subfolders)
+
+
+@app.route('/getboxes/<string:session>/<string:photo_set>')
+def getboxes(session,photo_set):
+    subfolders = [ f.name for f in os.scandir(pathtoimgsdir+'/'+session+'/'+photo_set) if f.is_dir() ]
+    return json.dumps(subfolders)
+
+@app.route('/getcams/<string:session>/<string:photo_set>/<string:box>')
+def getcams(session,photo_set,box):
+    subfolders = [ f.name for f in os.scandir(pathtoimgsdir+'/'+session+'/'+photo_set+'/'+box) if f.is_dir() ]
+    return json.dumps(subfolders)
+
+   
+@app.route('/savepos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>/<int:x>/<int:y>/<int:confidence>/<string:label>')
+def savepos(session,photo_set,box,camid,number,x,y,confidence,label):
+    pathtodata, fn = getdatafilename(session,photo_set,box,camid,number,"btviewer")
+
+    from pathlib import Path
+    
+    try:
+        data = json.load(open(fn,'r'))
+    except FileNotFoundError:
+        print("NO FILE")
+        data = []  
+        Path(pathtodata).mkdir(parents=True, exist_ok=True) #makes the path, helps if it doesn't exist.
+    except json.decoder.JSONDecodeError:
+        print("WARNING: Failed to decode json file")
+        data = []
+
+    if label=="none": #special none label
+        label=""
+    data.append({"x": x, "y": y, "label": label, "source": "btviewer", "meta":"", "version": "btqviewer, v0.1", "confidence":confidence})
+    json.dump(data,open(fn,'w'))
+    return None
+    
+@app.route('/deleteallpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
+def deleteallpos(session,photo_set,box,camid,number):
+    pathtodata, fn = getdatafilename(session,photo_set,box,camid,number,"btviewer")
+
+    from pathlib import Path
+    
+    try:
+        data = json.load(open(fn,'r'))
+    except FileNotFoundError:
+
+        Path(pathtodata).mkdir(parents=True, exist_ok=True) #makes the path, helps if it doesn't exist.
+    except json.decoder.JSONDecodeError:
+        pass
+    json.dump([],open(fn,'w'))
+    return None       
+
+#http://127.0.0.1:5000/loadpos/13JuneCalTest/cal1/12/02G14695547/0
+@app.route('/loadpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
+def loadpos(session,photo_set,box,camid,number):
+    alldata = []
+    for source in ['testsource','btviewer','retrodetect']:
+        _, fn = getdatafilename(session,photo_set,box,camid,number,source)
+        #print(fn);
+        #print("Trying to access metadata in: %s" % fn);
+        try:
+            data = json.load(open(fn,'r'))
+        except FileNotFoundError:
+            print("NO FILE")
+            data = []  
+        except json.decoder.JSONDecodeError:
+            print("WARNING: Failed to decode json file")
+            data = []
+        alldata.extend(data)
+        
+    return json.dumps(alldata)
+
+
+@app.route('/getimage/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>/<int:x1>/<int:y1>/<int:x2>/<int:y2>')
+def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
+    fn = getimgfilename(session,photo_set,box,camid,number)
+
+    rawdata = np.load(fn,allow_pickle=True)   
+    n = rawdata['index']
+    img = rawdata['img']
+    data = rawdata['record']
+
+    if img is None:
+        return jsonify({'index':-1,'photo':'failed','record':'failed'})
+
+    img = img.astype(float)
+
+    steps = int((x2-x1)/500)
+    if steps<1: steps = 1
+
+    img = (img.T[x1:x2,y1:y2]).T
+    k = int(img.shape[0] / steps)
+    l = int(img.shape[1] / steps)
+    img = img[:k*steps,:l*steps].reshape(k,steps,l,steps).max(axis=(-1,-3))
+
+    return jsonify({'index':n,'photo':img.tolist(),'record':data})
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0",port=port)
+

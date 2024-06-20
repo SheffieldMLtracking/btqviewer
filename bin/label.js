@@ -1,6 +1,8 @@
 function convertJSONtoImageURL(data,drawcrosshairs) {
     if (data === null) {alert("Failed");}
-    img = data['photo']
+    img = data['photo'];
+    fn = data['filename'];
+    $('span#filename').text(fn);
     height = img.length
     width = img[0].length
     var canvas=document.createElement("canvas");
@@ -374,6 +376,8 @@ function drawDots() {
     context.fillStyle = "Yellow";    
     context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
     context.stroke(); 
+    
+    //if (position['source']=='retrodetect')
    
     
   } 

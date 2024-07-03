@@ -63,8 +63,11 @@ function convertJSONtoImageURL(data,drawcrosshairs) {
     return "url('"+canvas.toDataURL()+"')";
 }
 
-url = "http://127.0.0.1:"+$('input#port').val()+"/getsessions";
-$.getJSON(url, function(data) {
+
+//var current_session = "";
+setTimeout(function() {
+    url = "http://127.0.0.1:"+$('input#port').val()+"/getsessions";
+    $.getJSON(url, function(data) {
     $('#session')
     .find('option')
     .remove()
@@ -75,7 +78,7 @@ $.getJSON(url, function(data) {
     }
     current_session = data[0];
     updateSets();
-});
+});},100);
 
 
 function updateSets() {
@@ -360,7 +363,7 @@ function drawDots() {
   }
 
   for (var i = 0; i<positions.length; i+=1) {
- 
+    
     position = positions[i]
     context.beginPath();
     pos = []
@@ -369,14 +372,33 @@ function drawDots() {
     pos['y'] = 768*(position['y']-y1)/(y2-y1);
     
 
-
-    context.arc(2+pos['x'],1+pos['y'], 25, 0, 2 * Math.PI, false);
-    context.strokeStyle = '#ffff00';
-    context.font = "20px Arial";
-    context.fillStyle = "Yellow";    
-    context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
-    context.stroke(); 
+    console.log(positions);
+    if (position['source']=='btalignment') {
+        context.moveTo(2+pos['x']-5,1+pos['y']);
+        context.lineTo(2+pos['x']+5,1+pos['y']);
+        context.moveTo(2+pos['x'],1+pos['y']-5);
+        context.lineTo(2+pos['x'],1+pos['y']+5);
+        col = '#ff0000';
+        if (position['meta']=='true') {col = '#ffffff';}
+        if (position['meta']=='placed') {col = '#ffff00';}
+        if (position['meta']=='xval') {col = '#0000ff';}
+        
+        context.strokeStyle = col; //'#ffff00';
+        //context.font = "20px Arial";
+        //context.fillStyle = "Yellow";    
+        //context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
+        context.stroke(); 
+    }
+    else
+    {
+        context.arc(2+pos['x'],1+pos['y'], 25, 0, 2 * Math.PI, false);
+        context.strokeStyle = '#ffff00';
+        context.font = "20px Arial";
+        context.fillStyle = "Yellow";    
+        context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
+        context.stroke(); 
     
+    }
     //if (position['source']=='retrodetect')
    
     
@@ -426,5 +448,5 @@ canvas.attr({height: canvasHeight, width: canvasWidth});
 // Set and create our dot.
 chosenloc = [0,0];
 
-setTimeout(refreshimages, 100);  
-setTimeout(drawDots, 200);  
+setTimeout(refreshimages, 1000);  
+setTimeout(drawDots, 1000);  

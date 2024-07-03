@@ -25,7 +25,10 @@ parser.add_argument('imgpath',type=str,help='Path to images')
 parser.add_argument('--port',required=False,type=int,help='Port')
 args = parser.parse_args()
 
+#TODO Convert to pathlib
 pathtoimgsdir = args.imgpath
+if pathtoimgsdir[-1]=='/': pathtoimgsdir=pathtoimgsdir[:-1] 
+print(pathtoimgsdir)
 pathtoimgsdir = os.path.abspath(pathtoimgsdir)
 scriptpath = os.path.dirname(os.path.realpath(__file__))
 os.chdir(scriptpath)
@@ -133,7 +136,7 @@ def deleteallpos(session,photo_set,box,camid,number):
 @app.route('/loadpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
 def loadpos(session,photo_set,box,camid,number):
     alldata = []
-    for source in ['testsource','btviewer','retrodetect']:
+    for source in ['testsource','btviewer','btretrodetect','btalignment','btinference']:
         _, fn = getdatafilename(session,photo_set,box,camid,number,source)
         #print(fn);
         #print("Trying to access metadata in: %s" % fn);

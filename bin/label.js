@@ -389,9 +389,11 @@ function drawDots() {
         //context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
         context.stroke(); 
     }
-    else
+    if (position['source']=='btretrodetect') 
     {
-        context.arc(2+pos['x'],1+pos['y'], 25, 0, 2 * Math.PI, false);
+        rad = 25;
+        if (position['label']=='') {rad = 3;}
+        context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
         context.strokeStyle = '#ffff00';
         context.font = "20px Arial";
         context.fillStyle = "Yellow";    
@@ -399,8 +401,17 @@ function drawDots() {
         context.stroke(); 
     
     }
-    //if (position['source']=='retrodetect')
+    if (position['source']=='btviewer') 
+    {
+        rad = 25;
+        context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
+        context.stroke(); 
+    
+    } 
    
+    rad = 1;
+    context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
+    context.stroke(); 
     
   } 
 }

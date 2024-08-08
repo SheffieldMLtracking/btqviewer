@@ -17,7 +17,17 @@ import re
 import json
 import pickle
 from functools import lru_cache
+from pathlib import Path
+import sys
+
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
+
+
 maxsize = None
+
+
 
 parser = argparse.ArgumentParser(description='Provide simple interface to label bee images')
 parser.add_argument('imgpath',type=str,help='Path to images')
@@ -25,11 +35,21 @@ parser.add_argument('imgpath',type=str,help='Path to images')
 parser.add_argument('--port',required=False,type=int,help='Port')
 args = parser.parse_args()
 
-#TODO Convert to pathlib
-pathtoimgsdir = args.imgpath
-if pathtoimgsdir[-1]=='/': pathtoimgsdir=pathtoimgsdir[:-1] 
-print(pathtoimgsdir)
-pathtoimgsdir = os.path.abspath(pathtoimgsdir)
+#TODO Convert whole file to pathlib
+
+#We might have been given a folder that isn't the root folder of a day's work (i.e. we want the folder that contains the sessions)
+#TODO I'm not sure how to deal with this (supposing we are given the home (~) folder?)
+#for now I look for where the np files are and work backwards...
+pathtoimgsdir = Path(args.imgpath).resolve()
+print("Given path: %s" % pathtoimgsdir)
+#print(list(pathtoimgsdir.glob('*')))
+examplenpfilepath = next(pathtoimgsdir.rglob('*.np'))
+pathtoimgsdir = Path(*examplenpfilepath.parts[:-5]).as_posix() #TODO Convert rest of doc to using pathlib
+print("Using %s as path to foldering containing all sessions." % pathtoimgsdir)
+
+#if pathtoimgsdir[-1]=='/': pathtoimgsdir=pathtoimgsdir[:-1] 
+#print(pathtoimgsdir)
+#pathtoimgsdir = os.path.abspath(pathtoimgsdir)
 scriptpath = os.path.dirname(os.path.realpath(__file__))
 os.chdir(scriptpath)
 
@@ -102,8 +122,7 @@ def savepos(session,photo_set,box,camid,number,x,y,confidence,label):
     
     try:
         data = json.load(open(fn,'r'))
-    except FileNotFoundError:
-        print("NO FILE")
+    except FileNotFoundError:        
         data = []  
         Path(pathtodata).mkdir(parents=True, exist_ok=True) #makes the path, helps if it doesn't exist.
     except json.decoder.JSONDecodeError:
@@ -143,7 +162,6 @@ def loadpos(session,photo_set,box,camid,number):
         try:
             data = json.load(open(fn,'r'))
         except FileNotFoundError:
-            print("NO FILE")
             data = []  
         except json.decoder.JSONDecodeError:
             print("WARNING: Failed to decode json file")
@@ -157,7 +175,11 @@ def loadpos(session,photo_set,box,camid,number):
 def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
     fn = getimgfilename(session,photo_set,box,camid,number)
 
-    rawdata = np.load(fn,allow_pickle=True)   
+    try:
+        rawdata = np.load(fn,allow_pickle=True)   
+    except FileNotFoundError:
+        print("Not found %s" % fn)
+        return jsonify({})
     n = rawdata['index']
     img = rawdata['img']
     data = rawdata['record']

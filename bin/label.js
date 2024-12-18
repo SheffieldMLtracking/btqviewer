@@ -1,6 +1,7 @@
 function convertJSONtoImageURL(data,drawcrosshairs) {
     if (data === null) {alert("Failed");}
     img = data['photo'];
+    if (img === null) {alert("Image NULL");}
     fn = data['filename'];
     $('span#filename').text(fn);
     height = img.length
@@ -65,7 +66,9 @@ function convertJSONtoImageURL(data,drawcrosshairs) {
 
 
 //var current_session = "";
-setTimeout(function() {
+$(document.body).ready(
+setTimeout(
+function() {
     url = "http://127.0.0.1:"+$('input#port').val()+"/getsessions";
     $.getJSON(url, function(data) {
     $('#session')
@@ -78,7 +81,9 @@ setTimeout(function() {
     }
     current_session = data[0];
     updateSets();
-});},100);
+});},500)
+);
+
 
 
 function updateSets() {
@@ -397,7 +402,7 @@ function drawDots() {
         context.strokeStyle = '#ffff00';
         context.font = "20px Arial";
         context.fillStyle = "Yellow";    
-        context.fillText(position['meta']+position['label'], pos['x'],1+pos['y'])
+        context.fillText(position['meta']+position['label']+'('+position['confidence'].toFixed(2)+')', pos['x'],1+pos['y'])
         context.stroke(); 
     
     }

@@ -19,10 +19,11 @@ import pickle
 from functools import lru_cache
 from pathlib import Path
 import sys
-
+import simplejpeg
 import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
+from threading import Timer
 
 
 maxsize = None
@@ -33,6 +34,7 @@ parser = argparse.ArgumentParser(description='Provide simple interface to label 
 parser.add_argument('imgpath',type=str,help='Path to images')
 #parser.add_argument('--refreshcache',help='Whether to refresh the cache',action="store_true")
 parser.add_argument('--port',required=False,type=int,help='Port')
+parser.add_argument('--nobrowser',help='Skip launching a web browser', action='store_true')
 args = parser.parse_args()
 
 #TODO Convert whole file to pathlib
@@ -44,6 +46,7 @@ pathtoimgsdir = Path(args.imgpath).resolve()
 print("Given path: %s" % pathtoimgsdir)
 #print(list(pathtoimgsdir.glob('*')))
 examplenpfilepath = next(pathtoimgsdir.rglob('*.np'))
+print("Example file: %s" % examplenpfilepath)
 pathtoimgsdir = Path(*examplenpfilepath.parts[:-5]).as_posix() #TODO Convert rest of doc to using pathlib
 print("Using %s as path to foldering containing all sessions." % pathtoimgsdir)
 
@@ -58,7 +61,13 @@ try:
 except FileExistsError:
     pass
     
-webbrowser.open("file://" + os.path.realpath('index.html'),new=2)
+if not args.nobrowser: 
+    #help from https://stackoverflow.com/questions/69239280/run-a-webbrowser-and-continue-script-without-close-the-browser
+    #the problem is, if this is call opens the browser (rather than just opens a tab) it seems to hang for a few seconds.
+    def open_browser():
+        webbrowser.open("file://" + os.path.realpath('index.html'),new=2)    
+    Timer(1, open_browser).start()    
+    print("BACK")
 if 'port' in args:
     port = args.port
 else:
@@ -133,7 +142,7 @@ def savepos(session,photo_set,box,camid,number,x,y,confidence,label):
         label=""
     data.append({"x": x, "y": y, "label": label, "source": "btviewer", "meta":"", "version": "btqviewer, v0.1", "confidence":confidence})
     json.dump(data,open(fn,'w'))
-    return None
+    return ""
     
 @app.route('/deleteallpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
 def deleteallpos(session,photo_set,box,camid,number):
@@ -149,7 +158,7 @@ def deleteallpos(session,photo_set,box,camid,number):
     except json.decoder.JSONDecodeError:
         pass
     json.dump([],open(fn,'w'))
-    return None       
+    return ""       
 
 #http://127.0.0.1:5000/loadpos/13JuneCalTest/cal1/12/02G14695547/0
 @app.route('/loadpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
@@ -157,8 +166,6 @@ def loadpos(session,photo_set,box,camid,number):
     alldata = []
     for source in ['testsource','btviewer','btretrodetect','btalignment','btinference']:
         _, fn = getdatafilename(session,photo_set,box,camid,number,source)
-        #print(fn);
-        #print("Trying to access metadata in: %s" % fn);
         try:
             data = json.load(open(fn,'r'))
         except FileNotFoundError:
@@ -185,7 +192,16 @@ def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
     data = rawdata['record']
 
     if img is None:
-        return jsonify({'index':-1,'photo':'failed','record':'failed'})
+        if 'jpgimg' in rawdata:
+            img = simplejpeg.decode_jpeg(rawdata['jpgimg'])[:,:,0]/10.0
+        else:
+            return jsonify({'index':-1,'photo':'failed','record':'failed'})
+        if 'imgpatches' in rawdata:
+            for imgpatch in rawdata['imgpatches']:
+                patchhalfwidth = imgpatch['raw_patch'].shape[0]//2
+                x = min(max(imgpatch['x'],12),img.shape[1]-patchhalfwidth)
+                y = min(max(imgpatch['y'],12),img.shape[0]-patchhalfwidth)
+                img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] = imgpatch['raw_patch']
 
     img = img.astype(float)
 

@@ -35,6 +35,7 @@ parser.add_argument('imgpath',type=str,help='Path to images')
 #parser.add_argument('--refreshcache',help='Whether to refresh the cache',action="store_true")
 parser.add_argument('--port',required=False,type=int,help='Port')
 parser.add_argument('--nobrowser',help='Skip launching a web browser', action='store_true')
+parser.add_argument('--highlight',help='Whether to highlight the tags in compact images', action='store_true')
 args = parser.parse_args()
 
 #TODO Convert whole file to pathlib
@@ -193,15 +194,24 @@ def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
 
     if img is None:
         if 'jpgimg' in rawdata:
-            img = simplejpeg.decode_jpeg(rawdata['jpgimg'])[:,:,0]/10.0
+            img = simplejpeg.decode_jpeg(rawdata['jpgimg'])[:,:,0].astype(float)
+            img/=rawdata['jpgimg_processing']['multiplier']
+            sfactor = rawdata['jpgimg_processing']['scalingfactor']
+            if sfactor!=1: img = np.repeat(np.repeat(img, sfactor,axis=1),sfactor,axis=0)
         else:
             return jsonify({'index':-1,'photo':'failed','record':'failed'})
         if 'imgpatches' in rawdata:
             for imgpatch in rawdata['imgpatches']:
+
                 patchhalfwidth = imgpatch['raw_patch'].shape[0]//2
                 x = min(max(imgpatch['x'],12),img.shape[1]-patchhalfwidth)
                 y = min(max(imgpatch['y'],12),img.shape[0]-patchhalfwidth)
-                img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] = imgpatch['raw_patch']
+                try:
+                    img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] = imgpatch['raw_patch']
+                    if args.highlight: img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth]+=5
+                except ValueError:
+                    print("Patch on edge of image, not sure how to deal with this, so ignoring the patch!")
+                    img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] += 5 #brighten just to show where it was.
 
     img = img.astype(float)
 

@@ -195,8 +195,14 @@ def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
     if img is None:
         if 'jpgimg' in rawdata:
             img = simplejpeg.decode_jpeg(rawdata['jpgimg'])[:,:,0].astype(float)
-            img/=rawdata['jpgimg_processing']['multiplier']
-            sfactor = rawdata['jpgimg_processing']['scalingfactor']
+            if 'jpgimg_processing' in rawdata:
+                mfactor = rawdata['jpgimg_processing']['multiplier']
+                sfactor = rawdata['jpgimg_processing']['scalingfactor']
+            else:
+                mfactor = 10 #backward compatible
+                sfactor = 1  #backward compatible
+            img/=mfactor
+            
             if sfactor!=1: img = np.repeat(np.repeat(img, sfactor,axis=1),sfactor,axis=0)
         else:
             return jsonify({'index':-1,'photo':'failed','record':'failed'})

@@ -214,10 +214,16 @@ def getimage(session,photo_set,box,camid,number,x1,y1,x2,y2):
                 y = min(max(imgpatch['y'],12),img.shape[0]-patchhalfwidth)
                 try:
                     img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] = imgpatch['raw_patch']
-                    if args.highlight: img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth]+=5
-                except ValueError:
+                    if args.highlight: 
+                        img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth]+=5
+                        img[y-patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth]+=50
+                        img[y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth]+=50
+                        img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth]+=50
+                        img[y-patchhalfwidth:y+patchhalfwidth,x+patchhalfwidth]+=50
+                        img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] += 5 #brighten just to show where it was.    
+                except:
                     print("Patch on edge of image, not sure how to deal with this, so ignoring the patch!")
-                    img[y-patchhalfwidth:y+patchhalfwidth,x-patchhalfwidth:x+patchhalfwidth] += 5 #brighten just to show where it was.
+                    
 
     img = img.astype(float)
 

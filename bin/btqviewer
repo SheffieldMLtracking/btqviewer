@@ -165,7 +165,9 @@ def deleteallpos(session,photo_set,box,camid,number):
 @app.route('/loadpos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>')
 def loadpos(session,photo_set,box,camid,number):
     alldata = []
-    for source in ['testsource','btviewer','btretrodetect','btalignment','btinference']:
+    source_types = ['testsource','btviewer','btretrodetect','btalignment','btinference']
+    source_types = source_types + [st+'_copy' for st in source_types] #can now have copies!
+    for source in source_types:
         _, fn = getdatafilename(session,photo_set,box,camid,number,source)
         try:
             data = json.load(open(fn,'r'))

@@ -11,5 +11,5 @@ setup(
   keywords = ['bumblebees','ecology','tracking','retroreflectors'],
   classifiers = [],
   install_requires=['numpy','flask','flask_cors'],
-  scripts=['bin/btqviewer'],
+  scripts=['bin/btqviewer','bin/btcopy'],
 )

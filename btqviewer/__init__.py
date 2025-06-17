@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 
 
-def copy_labels(base_path, MtoC=True, sourcename=None):
+def copy_labels(base_path, MtoC=True, sourcename=None, helpmsg=False):
     """
     Copies the label data from the monochrome camera image set to the colour one, or vice versa.
     base_path: The location of the set we want to do this to.
@@ -21,11 +21,15 @@ def copy_labels(base_path, MtoC=True, sourcename=None):
         monopath = glob(base_path+'/M-*')[0]
         colourpath = glob(base_path+'/C-*')[0]
     except Exception as e:
-        print("Didn't find either the source or destination folder in %s" % base_path)
-        return 
+        if helpmsg: print("Didn't find either the source or destination folder in %s" % base_path)
+        return
         
     camid = colourpath.split(os.sep)[-1]
-    crd = ColourRetrodetect(camid=camid)
+    try:
+        crd = ColourRetrodetect(camid=camid)
+    except:
+        print("Skipping %s" % base_path)
+        return
     offset = np.array(crd.offset)
     
     if not MtoC: offset=-offset #need to move in the other direction
@@ -59,5 +63,3 @@ def copy_labels(base_path, MtoC=True, sourcename=None):
             print(".",end="")
             json.dump(data,open(destjsonfilename,'w'))
         print("")
-
-

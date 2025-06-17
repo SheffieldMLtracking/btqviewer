@@ -405,7 +405,20 @@ function drawDots() {
         context.fillText(position['meta']+position['label']+'('+position['confidence'].toFixed(2)+')', pos['x'],1+pos['y'])
         context.stroke(); 
     
+    
     }
+    if (position['source']=='btcolour')
+    {
+        
+        context.arc(2+pos['x'],1+pos['y'], 50, 0, 2 * Math.PI, false);
+        context.strokeStyle = '#ffff00';
+        context.font = "20px Arial";
+        context.fillStyle = "Red";    
+        context.fillText(position['label'], pos['x'],100+pos['y'])
+        context.stroke(); 
+    
+
+    } 
     if (position['source']=='btviewer') 
     {
         rad = 25;

@@ -3,13 +3,19 @@
 import argparse
 import sys
 from btqviewer import copy_labels
+import os
 
 parser = argparse.ArgumentParser(description='Copies labels from greyscale sets to colour sets and back.')
 parser.add_argument('setpath',type=str,help='Path to the set')
 parser.add_argument('--sourcename',required=False,type=str,default=None,help='Which label type(s) to use. Default to all the ones it can find.')
 parser.add_argument('--ctom',help='By default copies from monochrome camera labels to colour, set to copy colour to mono', action='store_true')
+parser.add_argument('-r',help='Recursively search the sub-folders below the setpath',action='store_true')
 args = parser.parse_args()
 
-copy_labels(args.setpath, MtoC=not args.ctom, sourcename=args.sourcename)
+copy_labels(args.setpath, MtoC=not args.ctom, sourcename=args.sourcename,helpmsg=True)
+
+if args.r:
+    for root, dirs, files in os.walk(args.setpath):
+        copy_labels(root, MtoC=not args.ctom, sourcename=args.sourcename)
 
 

@@ -27,8 +27,10 @@ def copy_labels(base_path, MtoC=True, sourcename=None, helpmsg=False):
     camid = colourpath.split(os.sep)[-1]
     try:
         crd = ColourRetrodetect(camid=camid)
-    except:
+    except Exception as e:
         print("Skipping %s" % base_path)
+        print("Exception: ")
+        print(e)
         return
     offset = np.array(crd.offset)
     

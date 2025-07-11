@@ -148,7 +148,7 @@ $('input#scaletext').bind('input',function() {refreshimages();});
 $('input#imagenum').bind('input',function() {image = parseInt($('input#imagenum').val()); refreshimages();});
 //$('input#datetime').bind('input',function() {
 $('button#goto').click(function(){
-url = "http://127.0.0.1:"+$('input#port').val()+"/getindexoftime/"+cam+'/'+$('input#datetime').val();
+url = "http://127.0.0.1:"+$('input#port').val()+"/getindexoftime/"+current_session+'/'+current_set+'/'+current_box+'/'+cam+'/'+$('input#datetime').val();
 $.getJSON(url, function(data) {image=data; $('input#imagenum').val(data); refreshimages();}); 
 });
 $('button#newconfig').click(function(){

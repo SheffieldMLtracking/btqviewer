@@ -123,7 +123,27 @@ def getcams(session,photo_set,box):
     subfolders = [ f.name for f in os.scandir(pathtoimgsdir+'/'+session+'/'+photo_set+'/'+box) if f.is_dir() ]
     return json.dumps(subfolders)
 
-   
+def converttodt(st):
+    return datetime.strptime(st.replace('+',':'),'%H:%M:%S')    
+
+from datetime import datetime
+import numpy as np
+import re
+@app.route('/getindexoftime/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<string:time_string>')
+def getindexoftime(session,photo_set,box,camid,time_string):
+    try:
+        pathtofiles = pathtoimgsdir+'/'+session+'/'+photo_set+'/'+box+'/'+camid
+        fns = getimgfilelist(pathtofiles)
+        targ = converttodt(time_string)
+        gotoNum = np.argmin(np.abs([(converttodt(re.findall('.*_([0-9]{2}\\+[0-9]{2}\\+[0-9]{2})',fn)[0])-targ).total_seconds() for fn in fns]))
+        return json.dumps(int(gotoNum))
+    except Exception as e:
+        print("Broken:")
+        print(e)
+        return json.dumps(0)
+
+
+    
 @app.route('/savepos/<string:session>/<string:photo_set>/<string:box>/<string:camid>/<int:number>/<int:x>/<int:y>/<int:confidence>/<string:label>')
 def savepos(session,photo_set,box,camid,number,x,y,confidence,label):
     pathtodata, fn = getdatafilename(session,photo_set,box,camid,number,"btviewer")
@@ -173,7 +193,7 @@ def loadpos(session,photo_set,box,camid,number):
             data = json.load(open(fn,'r'))
             print("Found %s" % source)
         except FileNotFoundError:
-            print("File not found!")
+            #print("File not found!")
             data = []  
         except json.decoder.JSONDecodeError:
             print("WARNING: Failed to decode json file")

@@ -407,6 +407,19 @@ function drawDots() {
     
     
     }
+    if (position['source']=='btretrodetect_combined') 
+    {
+        rad = 30;
+        if (position['label']=='') {rad = 5;}
+        context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
+        context.strokeStyle = '#00ff00';
+        context.font = "25px Arial";
+        context.fillStyle = "Green";    
+        context.fillText('              '+position['meta']+position['label']+'('+position['confidence'].toFixed(2)+')', pos['x'],1+pos['y'])
+        context.stroke(); 
+    
+    
+    }
     if (position['source']=='btcolour')
     {
         

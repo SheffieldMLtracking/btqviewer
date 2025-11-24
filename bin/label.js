@@ -161,7 +161,7 @@ url = "http://127.0.0.1:"+$('input#port').val()+"/detectfromto/"+cam+'/'+image+'
 $.getJSON(url, function(data) {}); 
 });
 
-
+showtimes = false;
 cam_images = [0,0,0,0,0,0];
 image = 0;
 x1 = 0;
@@ -215,6 +215,7 @@ $(document).keypress(function(e) {
   if(e.which == 108) {$('button#last').trigger('click');}    //'l' 
   if(e.which == 76) {$('button#last10').trigger('click');} //'L' (shift-L)
   if(e.which == 114) {$('button#reset').trigger('click');}  //'r'
+  if(e.which == 116) {showtimes=!showtimes;}  //'t'
 
   if(e.which == 100) { //'d'
         photo_set = $('select#photo_set').val();
@@ -301,7 +302,7 @@ $('#image2').mousedown(function(e){
         sess_set_box_cam_string = session+'/'+photo_set+'/'+box+'/'+cam;
         url = "http://127.0.0.1:"+$('input#port').val()+"/savepos/"+sess_set_box_cam_string+'/'+image+"/"+Math.round(chosenloc[0])+"/"+Math.round(chosenloc[1])+"/"+confidence+"/"+label;
 
-        console.log(url);
+        //console.log(url);
         $.getJSON(url, function(data) {alert('???');}); 
         //refreshimages();
         setTimeout(refreshimages, 100)
@@ -377,7 +378,7 @@ function drawDots() {
     pos['y'] = 768*(position['y']-y1)/(y2-y1);
     
 
-    console.log(positions);
+    //console.log(positions);
     if (position['source']=='btalignment') {
         context.moveTo(2+pos['x']-5,1+pos['y']);
         context.lineTo(2+pos['x']+5,1+pos['y']);
@@ -407,6 +408,15 @@ function drawDots() {
     
     
     }
+    if (position['source']=='btinference') 
+    {
+        console.log(position);
+        context.arc(2+pos['x'],1+pos['y'], 1, 0, 2 * Math.PI, false);
+        context.strokeStyle = '#ffffff';        
+        context.stroke(); 
+    
+    
+    }    
     if (position['source']=='btretrodetect_combined') 
     {
         rad = 30;
@@ -417,6 +427,26 @@ function drawDots() {
         context.fillStyle = "Green";    
         context.fillText('              '+position['meta']+position['label']+'('+position['confidence'].toFixed(2)+')', pos['x'],1+pos['y'])
         context.stroke(); 
+    
+    
+    }
+    if (position['source']=='btretrodetect_combined_merged') 
+    {
+        if (position['confidence']>0.95) {
+            rad = 2;
+            
+            context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
+            v = (position['hour']-7)*20;
+            //context.strokeStyle = "rgb("+v.toString()+","+(255-v).toString()+",0)"; //'#ffff00';
+            context.strokeStyle = '#ffff0088';
+            if (showtimes) {
+                
+                context.font = "12px Arial";
+                context.fillStyle = "Yellow";    
+                context.fillText(' '+position['hour']+':'+position['minute']+':'+position['second'], pos['x'],1+pos['y']); //+' ('+position['confidence'].toFixed(2)+')'
+            }
+            context.stroke(); 
+        }
     
     
     }
@@ -440,9 +470,9 @@ function drawDots() {
     
     } 
    
-    rad = 1;
-    context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
-    context.stroke(); 
+    //rad = 1;
+    //context.arc(2+pos['x'],1+pos['y'], rad, 0, 2 * Math.PI, false);
+    //context.stroke(); 
     
   } 
 }

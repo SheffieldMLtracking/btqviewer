@@ -10,6 +10,6 @@ setup(
   download_url = 'https://github.com/SheffieldMLtracking/btqviewer.git',
   keywords = ['bumblebees','ecology','tracking','retroreflectors'],
   classifiers = [],
-  install_requires=['numpy','flask','flask_cors'],
+  install_requires=['numpy','flask','flask_cors','simplejpeg'],
   scripts=['bin/btqviewer','bin/btcopy'],
 )
